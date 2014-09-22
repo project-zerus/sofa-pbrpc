@@ -22,7 +22,7 @@
 
 // define BOOST_SYSTEM_SOURCE so that <boost/system/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
-#define BOOST_SYSTEM_SOURCE 
+#define BOOST_SYSTEM_SOURCE
 
 #include <boost/system/config.hpp>
 #include <boost/system/error_code.hpp>
@@ -57,7 +57,7 @@ namespace
   {
   public:
     generic_error_category(){}
-    const char *   name() const;
+    const char *   name() const BOOST_SYSTEM_NOEXCEPT;
     std::string    message( int ev ) const;
   };
 
@@ -65,14 +65,14 @@ namespace
   {
   public:
     system_error_category(){}
-    const char *        name() const;
-    std::string         message( int ev ) const;
-    error_condition     default_error_condition( int ev ) const;
+    const char *    name() const BOOST_SYSTEM_NOEXCEPT;
+    std::string     message( int ev ) const;
+    error_condition default_error_condition( int ev ) const BOOST_SYSTEM_NOEXCEPT;
   };
 
   //  generic_error_category implementation  ---------------------------------//
 
-  const char * generic_error_category::name() const
+  const char * generic_error_category::name() const BOOST_SYSTEM_NOEXCEPT
   {
     return "generic";
   }
@@ -161,14 +161,14 @@ namespace
   #  endif   // else POSIX version of strerror_r
   # endif  // else use strerror_r
   }
-  //  system_error_category implementation  --------------------------------// 
+  //  system_error_category implementation  --------------------------------//
 
-  const char * system_error_category::name() const
+  const char * system_error_category::name() const BOOST_SYSTEM_NOEXCEPT
   {
     return "system";
   }
 
-  error_condition system_error_category::default_error_condition( int ev ) const
+  error_condition system_error_category::default_error_condition( int ev ) const BOOST_SYSTEM_NOEXCEPT
   {
     switch ( ev )
     {
@@ -235,9 +235,9 @@ namespace
   # if ENOTEMPTY != EEXIST // AIX treats ENOTEMPTY and EEXIST as the same value
     case ENOTEMPTY: return make_error_condition( directory_not_empty );
   # endif // ENOTEMPTY != EEXIST
-  # if ENOTRECOVERABLE != ECONNRESET // the same on some Broadcom chips 
-    case ENOTRECOVERABLE: return make_error_condition( state_not_recoverable ); 
-  # endif // ENOTRECOVERABLE != ECONNRESET 
+  # if ENOTRECOVERABLE != ECONNRESET // the same on some Broadcom chips
+    case ENOTRECOVERABLE: return make_error_condition( state_not_recoverable );
+  # endif // ENOTRECOVERABLE != ECONNRESET
     case ENOTSOCK: return make_error_condition( not_a_socket );
     case ENOTSUP: return make_error_condition( not_supported );
     case ENOTTY: return make_error_condition( inappropriate_io_control_operation );
@@ -246,9 +246,9 @@ namespace
     case EOPNOTSUPP: return make_error_condition( operation_not_supported );
   # endif // EOPNOTSUPP != ENOTSUP
     case EOVERFLOW: return make_error_condition( value_too_large );
-  # if EOWNERDEAD != ECONNABORTED // the same on some Broadcom chips 
-    case EOWNERDEAD: return make_error_condition( owner_dead ); 
-  # endif // EOWNERDEAD != ECONNABORTED 
+  # if EOWNERDEAD != ECONNABORTED // the same on some Broadcom chips
+    case EOWNERDEAD: return make_error_condition( owner_dead );
+  # endif // EOWNERDEAD != ECONNABORTED
     case EPERM: return make_error_condition( operation_not_permitted );
     case EPIPE: return make_error_condition( broken_pipe );
     case EPROTO: return make_error_condition( protocol_error );
@@ -357,41 +357,41 @@ namespace
 
   std::string system_error_category::message( int ev ) const
   {
-# ifndef BOOST_NO_ANSI_APIS  
+# ifndef BOOST_NO_ANSI_APIS
     LPVOID lpMsgBuf = 0;
-    DWORD retval = ::FormatMessageA( 
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-        FORMAT_MESSAGE_FROM_SYSTEM | 
+    DWORD retval = ::FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL,
         ev,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
         (LPSTR) &lpMsgBuf,
         0,
-        NULL 
+        NULL
     );
     detail::local_free_on_destruction lfod(lpMsgBuf);
     if (retval == 0)
         return std::string("Unknown error");
-        
+
     std::string str( static_cast<LPCSTR>(lpMsgBuf) );
 # else  // WinCE workaround
     LPVOID lpMsgBuf = 0;
-    DWORD retval = ::FormatMessageW( 
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-        FORMAT_MESSAGE_FROM_SYSTEM | 
+    DWORD retval = ::FormatMessageW(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL,
         ev,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
         (LPWSTR) &lpMsgBuf,
         0,
-        NULL 
+        NULL
     );
     detail::local_free_on_destruction lfod(lpMsgBuf);
     if (retval == 0)
         return std::string("Unknown error");
-    
+
     int num_chars = (wcslen( static_cast<LPCWSTR>(lpMsgBuf) ) + 1) * 2;
     LPSTR narrow_buffer = (LPSTR)_alloca( num_chars );
     if (::WideCharToMultiByte(CP_ACP, 0, static_cast<LPCWSTR>(lpMsgBuf), -1, narrow_buffer, num_chars, NULL, NULL) == 0)
@@ -402,7 +402,7 @@ namespace
     while ( str.size()
       && (str[str.size()-1] == '\n' || str[str.size()-1] == '\r') )
         str.erase( str.size()-1 );
-    if ( str.size() && str[str.size()-1] == '.' ) 
+    if ( str.size() && str[str.size()-1] == '.' )
       { str.erase( str.size()-1 ); }
     return str;
   }
@@ -423,13 +423,13 @@ namespace boost
                                          //  address for comparison purposes
 # endif
 
-    BOOST_SYSTEM_DECL const error_category & system_category()
+    BOOST_SYSTEM_DECL const error_category & system_category() BOOST_SYSTEM_NOEXCEPT
     {
       static const system_error_category  system_category_const;
       return system_category_const;
     }
 
-    BOOST_SYSTEM_DECL const error_category & generic_category()
+    BOOST_SYSTEM_DECL const error_category & generic_category() BOOST_SYSTEM_NOEXCEPT
     {
       static const generic_error_category generic_category_const;
       return generic_category_const;
